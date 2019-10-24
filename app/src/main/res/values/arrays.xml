@@ -12,4 +12,17 @@
         <item>1.5</item>
         <item>2</item>
     </string-array>
+
+    <string-array name="quality" >
+        <item>Auto</item>
+        <item>720p</item>
+        <item>480p</item>
+        <item>360p</item>
+    </string-array>
+    <string-array name="quality_values">
+        <item>auto</item>
+        <item>720p</item>
+        <item>480p</item>
+        <item>360p</item>
+    </string-array>
 </resources>

@@ -34,7 +34,17 @@
             android:layout_gravity="right"
             android:background="@android:color/white"
             android:entries="@array/speeds" />
+
+
     </com.github.vkay94.dtpv.DoubleTapPlayerView>
+
+    <Spinner
+        android:id="@+id/spinner_quality"
+        android:layout_width="153dp"
+        android:layout_height="48dp"
+        android:layout_gravity="right"
+        android:background="@android:color/white"
+        android:entries="@array/quality" />
 
     <com.github.vkay94.dtpv.YouTubeDoubleTap
             android:id="@+id/doubleTapOverlay"

@@ -40,7 +40,9 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
     private ProgressBar progressBar;
     private LinearLayout controlPanel;
     private Spinner spinnerSpeeds;
+    private Spinner spinnerQuality;
     private String[] speeds;
+    private String[] qualities;
 
 
     @Override
@@ -57,7 +59,9 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
         progressBar = findViewById(R.id.progressBar);
         controlPanel = findViewById(R.id.control_panel);
         spinnerSpeeds = findViewById(R.id.spinner_speeds);
+        spinnerQuality = findViewById(R.id.spinner_quality);
         speeds = getResources().getStringArray(R.array.speed_values);
+        qualities = getResources().getStringArray(R.array.quality_values);
         initializePlayer();
         doubleTapOverlay
                 .setPlayer(playerView)
@@ -77,14 +81,60 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
         playerView.activateDoubleTap(true)
                 .setDoubleTapListener(doubleTapOverlay)
                 .setDoubleTapDelay(500);
-        buildMediaSource();
+        buildMediaSourceAuto();
     }
 
-    private void buildMediaSource() {
+    private void buildMediaSource480p() {
+        final MediaSource mediaSource = new ExtractorMediaSource.Factory(new DefaultDataSourceFactory(
+                MainActivity.this,
+                getResources().getString(R.string.app_name)
+        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"));
+//        final MediaSource mediaSource = new ProgressiveMediaSource.Factory(new DefaultDataSourceFactory(
+//                MainActivity.this,
+//                getResources().getString(R.string.app_name)
+//        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"));
+        if (player != null) {
+            player.prepare(mediaSource);
+            player.setPlayWhenReady(true);
+        }
+    }
+
+    private void buildMediaSource720p() {
+        final MediaSource mediaSource = new ExtractorMediaSource.Factory(new DefaultDataSourceFactory(
+                MainActivity.this,
+                getResources().getString(R.string.app_name)
+        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"));
+//        final MediaSource mediaSource = new ProgressiveMediaSource.Factory(new DefaultDataSourceFactory(
+//                MainActivity.this,
+//                getResources().getString(R.string.app_name)
+//        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"));
+        if (player != null) {
+            player.prepare(mediaSource);
+            player.setPlayWhenReady(true);
+        }
+    }
+
+    private void buildMediaSourceAuto() {
+        final MediaSource mediaSource = new ExtractorMediaSource.Factory(new DefaultDataSourceFactory(
+                MainActivity.this,
+                getResources().getString(R.string.app_name)
+        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"));
+//        final MediaSource mediaSource = new ProgressiveMediaSource.Factory(new DefaultDataSourceFactory(
+//                MainActivity.this,
+//                getResources().getString(R.string.app_name)
+//        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"));
+        if (player != null) {
+            player.prepare(mediaSource);
+            player.setPlayWhenReady(true);
+        }
+    }
+
+
+    private void buildMediaSource360p() {
          final MediaSource mediaSource = new ExtractorMediaSource.Factory(new DefaultDataSourceFactory(
                  MainActivity.this,
                  getResources().getString(R.string.app_name)
-         )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"));
+         )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"));
 //        final MediaSource mediaSource = new ProgressiveMediaSource.Factory(new DefaultDataSourceFactory(
 //                MainActivity.this,
 //                getResources().getString(R.string.app_name)
@@ -143,6 +193,35 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
                 @Override
                 public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
                     player.setPlaybackParameters(new PlaybackParameters(Float.valueOf(speeds[position])));
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> adapterView) {
+
+                }
+            });
+
+            spinnerQuality.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
+                    switch (position) {
+                        case 0:
+                            buildMediaSourceAuto();
+                            break;
+                        case 1:
+                            buildMediaSource720p();
+                            break;
+                        case 2:
+                            buildMediaSource480p();
+                            break;
+                        case 3:
+                            buildMediaSource360p();
+                            break;
+                        default:
+                            buildMediaSourceAuto();
+                            break;
+
+                    }
                 }
 
                 @Override
