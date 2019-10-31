@@ -1,11 +1,25 @@
 package com.ekeeda.videopalace;
 
+import android.annotation.SuppressLint;
+import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Handler;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
 import android.os.Bundle;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
@@ -19,19 +33,24 @@ import com.github.vkay94.dtpv.YouTubeDoubleTap;
 import com.google.android.exoplayer2.*;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
+import com.google.android.exoplayer2.ui.PlayerControlView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.material.appbar.AppBarLayout;
 
+import java.lang.ref.WeakReference;
 import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity implements PlayerDoubleTapListener, Player.EventListener {
+public class MainActivity extends AppCompatActivity implements PlayerDoubleTapListener, Player.EventListener, PlayerControlView.VisibilityListener {
 
     private String TAG = ".MainActivity";
     private SimpleExoPlayer player;
@@ -39,30 +58,34 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
     private DoubleTapPlayerView playerView;
     private ProgressBar progressBar;
     private LinearLayout controlPanel;
-    private Spinner spinnerSpeeds;
-    private Spinner spinnerQuality;
+    private AppBarLayout appBarLayout;
+    private Toolbar toolbar;
+    private int speedCheckedItem = -1;
+    private int qualityCheckedItem = -1;
+//    private Spinner spinnerSpeeds;
+//    private Spinner spinnerQuality;
     private String[] speeds;
     private String[] qualities;
+    private boolean isSystemUiShown;
 
 
+    //@SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.getWindow().setFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN
-        );
         setContentView(R.layout.activity_main);
-        Objects.requireNonNull(getSupportActionBar()).hide();
         playerView = findViewById(R.id.playerView);
         doubleTapOverlay = findViewById(R.id.doubleTapOverlay);
         progressBar = findViewById(R.id.progressBar);
         controlPanel = findViewById(R.id.control_panel);
-        spinnerSpeeds = findViewById(R.id.spinner_speeds);
-        spinnerQuality = findViewById(R.id.spinner_quality);
-        speeds = getResources().getStringArray(R.array.speed_values);
-        qualities = getResources().getStringArray(R.array.quality_values);
+        appBarLayout = findViewById(R.id.app_bar);
+        appBarLayout.setOutlineProvider(null);
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        Objects.requireNonNull(getSupportActionBar()).setElevation(0F);
+        Objects.requireNonNull(getSupportActionBar()).setTitle("Video Title");
         initializePlayer();
+        playerView.setControllerVisibilityListener(this);
         doubleTapOverlay
                 .setPlayer(playerView)
                 .setForwardRewindIncrementMs(10000)
@@ -77,10 +100,24 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
 
                     }
                 });
+//        spinnerSpeeds = findViewById(R.id.spinner_speeds);
+//        spinnerQuality = findViewById(R.id.spinner_quality);
+        speeds = getResources().getStringArray(R.array.speed_values);
+        qualities = getResources().getStringArray(R.array.quality_values);
+
+//        playerView.setOnTouchListener((view, motionEvent) -> {
+//            if (controlPanel.getVisibility() == View.VISIBLE) {
+//                controlPanel.setVisibility(View.GONE);
+//                getSupportActionBar().hide();
+//            } else {
+//                controlPanel.setVisibility(View.VISIBLE);
+//                getSupportActionBar().show();
+//            }
+//            return true;
+//        });
 
         playerView.activateDoubleTap(true)
-                .setDoubleTapListener(doubleTapOverlay)
-                .setDoubleTapDelay(500);
+                .setDoubleTapListener(doubleTapOverlay);
         buildMediaSourceAuto();
     }
 
@@ -88,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
         final MediaSource mediaSource = new ExtractorMediaSource.Factory(new DefaultDataSourceFactory(
                 MainActivity.this,
                 getResources().getString(R.string.app_name)
-        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"));
+        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"));
 //        final MediaSource mediaSource = new ProgressiveMediaSource.Factory(new DefaultDataSourceFactory(
 //                MainActivity.this,
 //                getResources().getString(R.string.app_name)
@@ -189,7 +226,8 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
             player.addListener(MainActivity.this);
             player.setPlaybackParameters(new PlaybackParameters(1.0F));
             playerView.setPlayer(player);
-            spinnerSpeeds.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            buildMediaSource360p();
+            /*spinnerSpeeds.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
                     player.setPlaybackParameters(new PlaybackParameters(Float.valueOf(speeds[position])));
@@ -228,7 +266,120 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
                 public void onNothingSelected(AdapterView<?> adapterView) {
 
                 }
+            });*/
+        }
+    }
+
+    private void showSpeedAlertDialog() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("Select speed");
+        builder.setSingleChoiceItems(speeds, speedCheckedItem, (dialogInterface, position) -> {
+            speedCheckedItem = position;
+            player.setPlaybackParameters(new PlaybackParameters(Float.valueOf(speeds[position].substring(0,1))));
+            dialogInterface.dismiss();
+        });
+        builder.create();
+        builder.show();
+    }
+
+    private final Runnable checkSystemUiRunnable = this::checkHideSystemUI;
+
+    private void checkHideSystemUI() {
+        // Check if system UI is shown and hide it by post a delayed handler
+        if (isSystemUiShown) {
+            hideSystemUI();
+            new Handler().postDelayed(checkSystemUiRunnable, 10000);
+        }
+    }
+
+    private void showSystemUI() {
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_VISIBLE
+        );
+    }
+
+    private void hideSystemUI() {
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
+    }
+
+    private void showQualityAlertDialog() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("Select quality");
+        builder.setSingleChoiceItems(qualities, qualityCheckedItem, (dialogInterface, position) -> {
+            qualityCheckedItem = position;
+            switch (position) {
+                case 0:
+                    buildMediaSourceAuto();
+                    break;
+                case 1:
+                    buildMediaSource720p();
+                    break;
+                case 2:
+                    buildMediaSource480p();
+                    break;
+                case 3:
+                    buildMediaSource360p();
+                    break;
+                default:
+                    buildMediaSourceAuto();
+                    break;
+
+            }
+            dialogInterface.dismiss();
+        });
+        builder.create();
+        builder.show();
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        int orientation = newConfig.orientation;
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            isSystemUiShown = false;
+            Objects.requireNonNull(player).setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
+            Objects.requireNonNull(playerView).setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
+            Objects.requireNonNull(getWindow());
+            hideSystemUI();
+            Objects.requireNonNull(getWindow()).getDecorView().setOnSystemUiVisibilityChangeListener(visibility -> {
+                if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                    new Handler().postDelayed(checkSystemUiRunnable, 10000);
+                    isSystemUiShown = true;
+                } else {
+                    isSystemUiShown = false;
+                }
             });
+        } else {
+            Objects.requireNonNull(player).setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT);
+            Objects.requireNonNull(playerView).setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
+            showSystemUI();
+            isSystemUiShown = true;
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.action_quality:
+                showQualityAlertDialog();
+                return true;
+            case R.id.action_speed:
+                showSpeedAlertDialog();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -319,5 +470,21 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
     @Override
     public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
 
+    }
+
+    @Override
+    public void onVisibilityChange(int visibility) {
+        switch (visibility) {
+            case View.VISIBLE:
+                appBarLayout.setExpanded(true, true);
+                Objects.requireNonNull(getSupportActionBar()).show();
+                Log.d("Controls", "controls are visible");
+                break;
+            case View.GONE:
+            case View.INVISIBLE:
+                appBarLayout.setExpanded(false, true);
+                Objects.requireNonNull(getSupportActionBar()).hide();
+                Log.d("Controls", "controls are invisible");
+        }
     }
 }
