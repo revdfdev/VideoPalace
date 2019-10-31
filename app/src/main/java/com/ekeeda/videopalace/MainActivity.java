@@ -22,6 +22,7 @@ import androidx.appcompat.widget.Toolbar;
 
 import android.os.Bundle;
 import android.widget.AdapterView;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -67,6 +68,8 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
     private String[] speeds;
     private String[] qualities;
     private boolean isSystemUiShown;
+    private FrameLayout fullScreenEnterButton;
+    private FrameLayout fullScreenExitButton;
 
 
     //@SuppressLint("ClickableViewAccessibility")
@@ -81,6 +84,18 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
         appBarLayout = findViewById(R.id.app_bar);
         appBarLayout.setOutlineProvider(null);
         toolbar = findViewById(R.id.toolbar);
+        fullScreenEnterButton = findViewById(R.id.exo_fullscreen_button);
+        fullScreenExitButton = findViewById(R.id.exo_fullscreen_exit_button);
+        int orientation = getResources().getConfiguration().orientation;
+        fullScreenEnterButton.setOnClickListener( v -> setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));
+        fullScreenExitButton.setOnClickListener(v -> setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            fullScreenExitButton.setVisibility(View.GONE);
+            fullScreenEnterButton.setVisibility(View.VISIBLE);
+        } else {
+            fullScreenEnterButton.setVisibility(View.GONE);
+            fullScreenExitButton.setVisibility(View.VISIBLE);
+        }
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setElevation(0F);
         Objects.requireNonNull(getSupportActionBar()).setTitle("Video Title");
@@ -343,6 +358,8 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
         int orientation = newConfig.orientation;
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
             isSystemUiShown = false;
+            fullScreenEnterButton.setVisibility(View.GONE);
+            fullScreenExitButton.setVisibility(View.VISIBLE);
             Objects.requireNonNull(player).setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
             Objects.requireNonNull(playerView).setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
             Objects.requireNonNull(getWindow());
@@ -359,7 +376,9 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
             Objects.requireNonNull(player).setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT);
             Objects.requireNonNull(playerView).setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
             showSystemUI();
-            isSystemUiShown = true;
+            isSystemUiShown = false;
+            fullScreenExitButton.setVisibility(View.GONE);
+            fullScreenEnterButton.setVisibility(View.VISIBLE);
         }
     }
 

@@ -18,7 +18,7 @@
         >
         <activity
                 android:name=".MainActivity"
-            android:configChanges="keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode|orientation"
         >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
