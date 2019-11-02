@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
     private boolean isSystemUiShown;
     private FrameLayout fullScreenEnterButton;
     private FrameLayout fullScreenExitButton;
+    private String PLAYER_CURRENT_POSITION = "CURRENT POSITION";
 
 
     //@SuppressLint("ClickableViewAccessibility")
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setElevation(0F);
         Objects.requireNonNull(getSupportActionBar()).setTitle("Video Title");
-        initializePlayer();
+        initializePlayer(savedInstanceState);
         playerView.setControllerVisibilityListener(this);
         doubleTapOverlay
                 .setPlayer(playerView)
@@ -133,10 +134,10 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
 
         playerView.activateDoubleTap(true)
                 .setDoubleTapListener(doubleTapOverlay);
-        buildMediaSourceAuto();
+        buildMediaSourceAuto(savedInstanceState);
     }
 
-    private void buildMediaSource480p() {
+    private void buildMediaSource480p(final Bundle savedInstanceState) {
         final MediaSource mediaSource = new ExtractorMediaSource.Factory(new DefaultDataSourceFactory(
                 MainActivity.this,
                 getResources().getString(R.string.app_name)
@@ -145,13 +146,17 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
 //                MainActivity.this,
 //                getResources().getString(R.string.app_name)
 //        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"));
-        if (player != null) {
-            player.prepare(mediaSource);
-            player.setPlayWhenReady(true);
+        if (savedInstanceState != null) {
+            Objects.requireNonNull(player).prepare(mediaSource);
+            Objects.requireNonNull(player).seekTo(savedInstanceState.getLong(PLAYER_CURRENT_POSITION, 0L));
+            Objects.requireNonNull(player).setPlayWhenReady(true);
+        } else {
+            Objects.requireNonNull(player).prepare(mediaSource);
+            Objects.requireNonNull(player).setPlayWhenReady(true);
         }
     }
 
-    private void buildMediaSource720p() {
+    private void buildMediaSource720p(final Bundle savedInstanceState) {
         final MediaSource mediaSource = new ExtractorMediaSource.Factory(new DefaultDataSourceFactory(
                 MainActivity.this,
                 getResources().getString(R.string.app_name)
@@ -160,13 +165,17 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
 //                MainActivity.this,
 //                getResources().getString(R.string.app_name)
 //        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"));
-        if (player != null) {
-            player.prepare(mediaSource);
-            player.setPlayWhenReady(true);
+        if (savedInstanceState != null) {
+            Objects.requireNonNull(player).prepare(mediaSource);
+            Objects.requireNonNull(player).seekTo(savedInstanceState.getLong(PLAYER_CURRENT_POSITION, 0L));
+            Objects.requireNonNull(player).setPlayWhenReady(true);
+        } else {
+            Objects.requireNonNull(player).prepare(mediaSource);
+            Objects.requireNonNull(player).setPlayWhenReady(true);
         }
     }
 
-    private void buildMediaSourceAuto() {
+    private void buildMediaSourceAuto(final Bundle savedInstanceState) {
         final MediaSource mediaSource = new ExtractorMediaSource.Factory(new DefaultDataSourceFactory(
                 MainActivity.this,
                 getResources().getString(R.string.app_name)
@@ -175,14 +184,18 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
 //                MainActivity.this,
 //                getResources().getString(R.string.app_name)
 //        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"));
-        if (player != null) {
-            player.prepare(mediaSource);
-            player.setPlayWhenReady(true);
+        if (savedInstanceState != null) {
+            Objects.requireNonNull(player).prepare(mediaSource);
+            Objects.requireNonNull(player).seekTo(savedInstanceState.getLong(PLAYER_CURRENT_POSITION, 0L));
+            Objects.requireNonNull(player).setPlayWhenReady(true);
+        } else {
+            Objects.requireNonNull(player).prepare(mediaSource);
+            Objects.requireNonNull(player).setPlayWhenReady(true);
         }
     }
 
 
-    private void buildMediaSource360p() {
+    private void buildMediaSource360p(final Bundle savedInstanceState) {
          final MediaSource mediaSource = new ExtractorMediaSource.Factory(new DefaultDataSourceFactory(
                  MainActivity.this,
                  getResources().getString(R.string.app_name)
@@ -191,10 +204,14 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
 //                MainActivity.this,
 //                getResources().getString(R.string.app_name)
 //        )).createMediaSource(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"));
-         if (player != null) {
-             player.prepare(mediaSource);
-             player.setPlayWhenReady(true);
-         }
+        if (savedInstanceState != null) {
+            Objects.requireNonNull(player).prepare(mediaSource);
+            Objects.requireNonNull(player).seekTo(savedInstanceState.getLong(PLAYER_CURRENT_POSITION, 0L));
+            Objects.requireNonNull(player).setPlayWhenReady(true);
+        } else {
+            Objects.requireNonNull(player).prepare(mediaSource);
+            Objects.requireNonNull(player).setPlayWhenReady(true);
+        }
     }
 
     private void releasePlayer() {
@@ -218,7 +235,14 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
         }
     }
 
-    private void initializePlayer() {
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(PLAYER_CURRENT_POSITION, Math.max(0, Objects.requireNonNull(player.getCurrentPosition())));
+
+    }
+
+    private void initializePlayer(final Bundle savedInstanceState) {
         if (player == null) {
             LoadControl loadControl = new DefaultLoadControl.Builder()
                     .setBufferDurationsMs(
@@ -241,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
             player.addListener(MainActivity.this);
             player.setPlaybackParameters(new PlaybackParameters(1.0F));
             playerView.setPlayer(player);
-            buildMediaSource360p();
+            buildMediaSource360p(savedInstanceState);
             /*spinnerSpeeds.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
@@ -330,19 +354,19 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
             qualityCheckedItem = position;
             switch (position) {
                 case 0:
-                    buildMediaSourceAuto();
+                    buildMediaSourceAuto(null);
                     break;
                 case 1:
-                    buildMediaSource720p();
+                    buildMediaSource720p(null);
                     break;
                 case 2:
-                    buildMediaSource480p();
+                    buildMediaSource480p(null);
                     break;
                 case 3:
-                    buildMediaSource360p();
+                    buildMediaSource360p(null);
                     break;
                 default:
-                    buildMediaSourceAuto();
+                    buildMediaSourceAuto(null);
                     break;
 
             }
@@ -373,8 +397,8 @@ public class MainActivity extends AppCompatActivity implements PlayerDoubleTapLi
                 }
             });
         } else {
-            Objects.requireNonNull(player).setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT);
-            Objects.requireNonNull(playerView).setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
+            Objects.requireNonNull(player).setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
+            Objects.requireNonNull(playerView).setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
             showSystemUI();
             isSystemUiShown = false;
             fullScreenExitButton.setVisibility(View.GONE);

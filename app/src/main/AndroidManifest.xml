@@ -17,9 +17,7 @@
             tools:ignore="GoogleAppIndexingWarning"
         >
         <activity
-                android:name=".MainActivity"
-            android:configChanges="keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode|orientation"
-        >
+            android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
